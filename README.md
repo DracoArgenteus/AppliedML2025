@@ -16,13 +16,15 @@ We recommend that you use your laptop, but perhaps also that you try both method
 
 To run things on your local computer, you will have to install additional software to be able to properly run the notebooks.
 
+**Update: Apr 24, 2025**: try these instructions [MacOS instructions](/Week0/MacOS_instructions.md)
+
 Given the wide range of operating systems available out there, we cannot guarantee that the instructions above will work on _all_ platforms. As of now, __the instructions below have been tested on the following systems:__
 
 * [__Instructions for Linux__](./docs/install_instruction_linux.md)
 
 * [__Instructions for Windows 10__](./docs/install_instruction_windows10.md)
 
-* [__Instructions for MacOs Mojave__](./docs/install_instruction_macos_mojave.md)
+ 
 
 
 ---
