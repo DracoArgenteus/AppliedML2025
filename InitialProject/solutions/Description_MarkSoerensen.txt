@@ -1,0 +1,62 @@
+Overall strategy was to have fun trying to create efficient pipelines - including the failed combined atempts 3 and 4 intended to output both cls and reg!
+
+1: Classification_MarkSoerensen_LGBM-Optuna.csv
+Algorithm: LightGBM Classifier
+Key Hyperparameter (HP) values: boosting_type=dart, n_estimators=600, learning_rate=0.1377, num_leaves=17, max_depth=5, min_child_samples=41, subsample=0.704, colsample_bytree=0.896, reg_alpha=0.0029, reg_lambda=0.0018
+HP Optimisation: Optuna with 50 trials, minimizing LogLoss, using 5-fold cross-validation within each trial.
+Pre-processing: StandardScaler on input features.
+Loss Function & Validation Performance:
+    Loss Function Used for Training/Tuning: LogLoss (Binary Cross Entropy)
+    Value on Validation Set: 0.1214 (Mean CV LogLoss from Optuna study over 5 folds)
+
+2: Regression_MarkSoerensen_LGBM-Reg.csv:
+  Algorithm: LightGBM Regressor
+  Key HP values: boosting_type=dart, n_estimators=1700, learning_rate=0.03338, num_leaves=38, max_depth=6, min_child_samples=10, subsample=0.5737, colsample_bytree=0.9979, reg_alpha=8.29e-08, reg_lambda=3.21e-08
+  HP optimisation: Optuna with 50 trials, minimizing Relative MAE (Mean Absolute Relative Error), using 5-fold cross-validation within each trial.
+  Pre-processing: StandardScaler on input features (applied to electron-only data for training).
+  Loss function and value on validation set: 0.2430 (Best Mean CV Relative MAE from Optuna, 5-fold CV)
+
+5: Clustering_MarkSoerensen_AutoEncoder-1.csv:
+   Algorithm: K-Means clustering, with feature selection via Autoencoder (L1 regularization) and anomaly detection via a separate Autoencoder.
+   Key HP values:
+      K-Means K: 5
+      Number of Selected Features (N): 2
+      Feature Selection AE L1 Strength: 0.001
+      Feature Selection AE Architecture: Encoder Units=[16, 8] (Defaults from script)
+      Anomaly Detection AE Architecture: Encoder Units=[6, 4] (Defaults from script)
+      Anomaly Detection AE Threshold: Top 5% reconstruction error (95th percentile on training data)
+   HP optimisation: Parameters (N_features, K_Means_K, FS_AE_L1_Strength)
+   Parameters in model:
+      K-Means: 5 clusters * 2 features = 10 parameters (centroids).
+   Pre-processing:
+      1. Log1p transformation on "Energy" and "Lz" features (if in candidate pool).
+      2. StandardScaler on candidate features (training set only for FS AE).
+      3. Feature Selection: Autoencoder with L1 regularization selected 2 features.
+      4. Anomaly Detection: Autoencoder trained on selected features (training split); anomalies removed from full dataset based on reconstruction error.
+      5. StandardScaler on the final 2 selected features (after anomaly removal) before K-Means.
+   Loss function and value on validation set:
+      K-Means: Inertia (sum of squared distances)
+      Feature Selection AE: MSE (Mean Squared Error) for reconstruction (trained on training split of candidate features).
+      Anomaly Detection AE: MSE (Mean Squared Error) for reconstruction (trained on training split of selected features).
+   Own evaluation: Silhouette Score = 0.4051. This configuration with 2 features and anomaly detection provides a reasonably structured clustering.
+
+6: Clustering_MarkSoerensen_AutoEncoder-2.csv:
+   Algorithm: K-Means clustering, with feature selection via Autoencoder (L1 regularization).
+   Key HP values:
+      K-Means K: 5
+      Number of Selected Features (N): 2
+      Feature Selection AE L1 Strength: 0.001
+      Feature Selection AE Architecture: Encoder Units=[16, 8]
+   HP optimisation: Parameters (N_features, K_Means_K, FS_AE_L1_Strength) 
+   Parameters in model:
+      K-Means: 5 clusters * 2 features = 10 parameters (centroids).
+   Pre-processing:
+      1. Log1p transformation on "Energy" and "Lz" features (if in candidate pool).
+      2. StandardScaler on candidate features (training set only for FS AE).
+      3. Feature Selection: Autoencoder with L1 regularization selected 2 features.
+      4. StandardScaler on the final 2 selected features before K-Means.
+   Loss function and value on validation set:
+      K-Means: Inertia (sum of squared distances)
+      Feature Selection AE: MSE (Mean Squared Error) for reconstruction (trained on training split of candidate features).
+   Own evaluation: Silhouette Score = 0.4571. This is the highest Silhouette score achieved in this set of experiments, suggesting that for N=2 features (selected by AE with L1=0.001) and K=5, not performing AE-based anomaly detection yields better internal cluster validation.
+
